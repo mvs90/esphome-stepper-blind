@@ -1,0 +1,16 @@
+name: Validate
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install esphome==2026.10.0
+      - run: python tests/run.py
+      - run: python tests/test_config.py
+      - run: python tests/build_examples.py
