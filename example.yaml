@@ -39,7 +39,13 @@ cover:
       name: Endstop
       id: hass_endstop
       entity_category: config
+    # Optional: diesen Block weglassen, um nur stepper.max_speed zu verwenden.
+    speed:
+      name: Geschwindigkeit
+      entity_category: config
+      mode: slider
+      initial_value: 250 steps/s
 external_components:
-  - source: github://mvs90/esphome-stepper-blind@v0.1.0
+  - source: github://mvs90/esphome-stepper-blind@v0.2.0
     components:
       - stepper_blind

@@ -13,7 +13,7 @@ Beide verwenden die Komponente direkt aus diesem öffentlichen Repository:
 
 ```yaml
 external_components:
-  - source: github://mvs90/esphome-stepper-blind@v0.1.0
+  - source: github://mvs90/esphome-stepper-blind@v0.2.0
     components: [stepper_blind]
 
 stepper:
@@ -37,9 +37,14 @@ cover:
       name: Endstop
       id: hass_endstop
       entity_category: config
+    speed:
+      name: Geschwindigkeit
+      entity_category: config
+      mode: slider
+      initial_value: 250 steps/s
 ```
 
-Den `endstop`-Block bei Bedarf ganz weglassen. Die übrigen Geräteeinstellungen
+Die Blöcke `endstop` und `speed` sind unabhängig voneinander optional. Die übrigen Geräteeinstellungen
 (WLAN, API, OTA, Logger und Board) aus dem vollständigen Beispiel ergänzen.
 `secrets.yaml.example` als `secrets.yaml` neben die Geräte-YAML kopieren und lokal
 ausfüllen. Bestehenden API-Verschlüsselungsschlüssel und OTA-Zugang übernehmen.
@@ -77,6 +82,42 @@ external_components:
 Die Komponenten-ID (`id: blinded`) stabil halten: sie bestimmt den Speicherschlüssel.
 Den Motor ausschließlich über dieses Cover steuern; direkte Stepper-Aktionen,
 weitere Cover am gleichen Motor und externe Positionsänderungen sind nicht unterstützt.
+
+## Optionale Geschwindigkeit (ab v0.2.0)
+
+Mit dem `speed`-Block erhält Home Assistant einen Regler in **Schritten pro Sekunde**.
+Der Bereich reicht von **1** bis zum YAML-Wert `max_speed` des über `stepper_id`
+verbundenen Motors. In den Beispielen sind das **1–250 Schritte/s**. Der Regler
+kann diese Obergrenze nicht überschreiten. Ungültige und nicht endliche Werte
+werden abgewiesen; der bisherige Wert bleibt erhalten. Die UI-Schrittweite ist 1;
+endliche Zwischenwerte innerhalb des Bereichs sind über die API ebenfalls erlaubt.
+
+`initial_value` ist optional und akzeptiert eine Zahl oder z. B. `150 steps/s`.
+Ohne Angabe beginnt die Komponente mit `stepper.max_speed`. Der Startwert muss
+mindestens 1 und höchstens die konfigurierte Motorgrenze sein. Bei aktivem
+`speed`-Block muss auch `stepper.max_speed` endlich und mindestens 1 sein.
+
+Änderungen wirken über den vorhandenen Stepper-Treiber auch während einer Fahrt,
+ohne das Fahrziel oder den Positionszähler zu ändern. Ein Reglereingriff im
+Stillstand startet den Motor nicht. Bei einem Neustart wird erneut der YAML-Startwert
+verwendet: die Reglereinstellung wird **nicht gespeichert**. Das Speicherformat
+für Position und Endstop bleibt unverändert und ist mit v0.1.0 kompatibel.
+Ohne `speed`-Block greift die Komponente nicht in die Geschwindigkeit ein.
+
+Die gewählte Geschwindigkeit ist ein Sollwert beziehungsweise eine Obergrenze;
+die tatsächlich erreichte Schrittfrequenz hängt auch von Beschleunigung und
+Loop-Laufzeit ab. Die 250 Schritte/s sind die bisherige Konfiguration und keine
+Messung der physikalischen Motorgrenze. Der ULN2003 bezeichnet den Treiber,
+nicht den konkreten Motor. Höhere Werte müssen zur Motorspezifikation, Versorgung
+und Last passen und an Hardware geprüft werden; Schrittverluste verfälschen die
+angenommene Position. Die Beispiele erhöhen die bisherige Grenze deshalb nicht.
+
+Beschleunigung und Verzögerung können weiterhin unter `stepper` mit
+`acceleration` und `deceleration` konfiguriert werden. Die Geschwindigkeitsänderung
+verwendet ESPHomes `set_max_speed` samt `on_update_speed`, wie die eingebaute
+`stepper.set_speed`-Aktion. Insbesondere eine Verringerung kann beim ULN2003
+unmittelbar auf den neuen Maximalwert begrenzen; eine sanfte Rampe für einen
+Reglereingriff wird nicht zusätzlich implementiert.
 
 ## Migration und Referenzieren
 

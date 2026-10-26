@@ -17,6 +17,11 @@ void StepperBlind::setup() {
   }
   motor_->report_position(steps);
   motor_->set_target(steps);
+  if (speed_number_ != nullptr) {
+    motor_->set_max_speed(speed_);
+    motor_->on_update_speed();
+    speed_number_->publish_state(speed_);
+  }
   saved_position_ = steps;
   saved_closed_ = restored ? closed_ : 0;
   // Persist the initial YAML endpoint too, even if the blind has never moved.
@@ -112,5 +117,22 @@ bool StepperBlind::change_endstop(float value) {
 void EndstopNumber::control(float value) {
   parent_->change_endstop(value);
   publish_state(parent_->closed_position());
+}
+
+bool StepperBlind::change_speed(float value) {
+  if (speed_number_ == nullptr || !std::isfinite(value) || value < 1.0f || value > max_speed_) {
+    ESP_LOGW(TAG, "Geschwindigkeit ausserhalb des konfigurierten Bereichs");
+    return false;
+  }
+  speed_ = value;
+  motor_->set_max_speed(value);
+  // Match ESPHome's stepper.set_speed action, including driver notification.
+  motor_->on_update_speed();
+  return true;
+}
+
+void SpeedNumber::control(float value) {
+  parent_->change_speed(value);
+  publish_state(parent_->speed());
 }
 }}  // namespace esphome::stepper_blind

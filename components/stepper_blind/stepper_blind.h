@@ -17,18 +17,30 @@ class EndstopNumber : public number::Number {
   StepperBlind *parent_{};
 };
 
+class SpeedNumber : public number::Number {
+ public:
+  void set_parent(StepperBlind *parent) { parent_ = parent; }
+ protected:
+  void control(float value) override;
+  StepperBlind *parent_{};
+};
+
 class StepperBlind : public cover::Cover, public Component {
  public:
   void set_stepper(stepper::Stepper *motor) { motor_ = motor; }
   void set_closed_position(int32_t value) { closed_ = value; }
   void set_preference_key(uint32_t key) { key_ = key; }
   void set_endstop_number(EndstopNumber *entity) { endstop_ = entity; }
+  void set_speed_number(SpeedNumber *entity) { speed_number_ = entity; }
+  void set_speed_config(float maximum, float initial) { max_speed_ = maximum; speed_ = initial; }
   float get_setup_priority() const override { return setup_priority::LATE; }
   void setup() override;
   void loop() override;
   void on_shutdown() override;
   cover::CoverTraits get_traits() override;
   bool change_endstop(float value);
+  bool change_speed(float value);
+  float speed() const { return speed_; }
   int32_t closed_position() const { return closed_; }
  protected:
   void control(const cover::CoverCall &call) override;
@@ -37,6 +49,9 @@ class StepperBlind : public cover::Cover, public Component {
   struct StoredState { int32_t position; int32_t closed; };
   stepper::Stepper *motor_{};
   EndstopNumber *endstop_{};
+  SpeedNumber *speed_number_{};
+  float max_speed_{250.0f};
+  float speed_{250.0f};
   ESPPreferenceObject pref_;
   int32_t closed_{10000};
   int32_t saved_position_{0};
