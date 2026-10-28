@@ -171,3 +171,9 @@ Dokumentation:
 [External Components](https://esphome.io/components/external_components/),
 [Stepper](https://esphome.io/components/stepper/),
 [Preferences](https://esphome.io/components/esphome/#preferences-component).
+
+## Projekt unterstützen
+
+Wenn dir dieses Projekt hilft, kannst du seine Weiterentwicklung und Pflege
+freiwillig über [PayPal](https://www.paypal.me/mvs90) unterstützen.
+Vielen Dank für deine Unterstützung!
